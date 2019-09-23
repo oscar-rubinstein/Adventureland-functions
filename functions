@@ -1,0 +1,68 @@
+// change the appearance of a character based on a dictionary of some preset combinations.
+function make_character_sexy(loadout) {
+
+    const loadouts = {
+
+        "demonic": {skin: "mbody1e", head: "mmakeup07", back: "wings100", stone: "xgravestone1", face: "beardo02"},
+        "fallen": {hair: "hairdo412", back: "wings101", beard: "beardo10", head: "makeup134", stone: "xgravestone2", skin: "marmor7b" },
+        "iceQueen": {hair: "hairdo419", head: "makeup133", stone: "xgravestone3", skin: "marmor7a", hat: "hat318"}
+
+    }
+
+
+    if(!loadouts[loadout]) {
+        game_log("Loadout not found. Choose from the following loadouts: ", "red");
+        
+        for(const preset in loadouts) {
+            game_log(preset, "orange")
+        }
+
+
+    } else {
+        log('Loadout found! Making character sexy.')
+
+        //clear all existing cosmetics
+        for(const slot_old in character.cx) {
+            parent.socket.emit("cx", { slot: slot_old, name: null });
+        } 
+
+        for (const slot in loadouts[loadout]) {
+            parent.socket.emit("cx", { slot: slot, name: loadouts[loadout][slot] });
+        }
+    }
+}
+
+// enforces which servers characters can/cannot be on
+function server_enforcer() {
+
+    let charName = character.name;
+    let cur_server = server.region + " " + server.id;
+
+    const allowedServers = {
+        "android1": {'EU II': true},
+        "android2": {'US II': true, 'US PVP': true, 'EU PVP': true},
+        "android3": {'ASIA I': true}
+    }
+
+    if(allowedServers[charName][cur_server]) {
+        log('Character is currently on a homeworld server')
+    } else {
+        game_log('Character is not on an allowed server and will hop in 3 seconds.')
+        setTimeout(function(){          
+
+            //enforce order of object and swap to first server 
+            let newServer = Object.keys(allowedServers[charName])[0];
+            
+            game_log(newServer, 'green')
+            
+            //transform string into array
+            newServerArray = newServer.split(' ');
+            
+            //spread notation
+            change_server(...newServerArray);
+         
+        }, 3000);
+         game_log('Character does not have permission to be on this server. Hopping...', 'red')
+
+    }
+}
